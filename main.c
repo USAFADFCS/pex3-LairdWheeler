@@ -1,12 +1,12 @@
 /** main.c
  * ===========================================================
- * Name: _______________________, __ ___ 2026
- * Section: CS483 / ____
+ * Name: Laird Wheeler, 4 23 2026
+ * Section: CS483 / M3
  * Project: PEX3 - Page Replacement Simulator
  * Purpose: Reads a BYU binary memory trace file and simulates
  *          LRU page replacement to measure fault rates across
  *          varying frame allocations.
- * Documentation: TBD
+ * Documentation: No outside help received
  * =========================================================== */
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,6 +71,17 @@ int main(int argc, char **argv) {
     //       and allocate the faults[] array.  faults[f] will hold the
     //       total number of page faults that occur when f frames are
     //       available.  Use calloc so all entries start at zero.
+    PageQueue *pq = pqInit(maxFrames);
+
+    unsigned long *faults = calloc(maxFrames + 1, sizeof(unsigned long));
+    if (faults == NULL) {
+
+        fprintf(stderr, "calloc failed\n");
+        pqFree(pq);
+        fclose(ifp);
+        exit(1);
+    }
+    
 
     // Process each memory access from the trace file
     while (!feof(ifp)) {
@@ -94,6 +105,21 @@ int main(int argc, char **argv) {
         //
         //       Update faults[] accordingly.
 
+        long d = pqAccess(pq, pageNum);
+ 
+        if (d == -1) {
+            for (int f = 1; f <= maxFrames; f++) {
+
+                faults[f]++;
+            }
+        } else {
+            for (long f = 1; f <= d; f++) {
+
+                faults[f]++;
+            }
+        }
+
+
     }
 
     fprintf(stderr, "\n%lu total accesses processed\n", numAccesses);
@@ -106,8 +132,17 @@ int main(int argc, char **argv) {
     //       printf("%d,%lu,%f\n", frameCount, faults[frameCount],
     //              (double)faults[frameCount] / (double)numAccesses);
 
+    printf("test\n");
+    for (int frameCount = 1; frameCount <= maxFrames; frameCount++) {
+        printf("%d,%lu,%f\n", frameCount, faults[frameCount], (double)faults[frameCount] / (double)numAccesses);
+    }
+
+
     // TODO: Free your PageQueue and the faults[] array,
     //       then close the file.
+    pqFree(pq);
+    free(faults);
+    fclose(ifp);
 
     return 0;
 }
